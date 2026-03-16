@@ -1,0 +1,44 @@
+name: Node.js CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 01-cicd-webapp/nodejs-app/package.json
+    
+    - name: Install dependencies
+      working-directory: ./01-cicd-webapp/nodejs-app
+      run: npm ci
+    
+    - name: Run linter
+      working-directory: ./01-cicd-webapp/nodejs-app
+      run: npm run lint || true
+    
+    - name: Run tests
+      working-directory: ./01-cicd-webapp/nodejs-app
+      run: npm test
+    
+    - name: Build Docker image
+      working-directory: ./01-cicd-webapp/nodejs-app
+      run: docker build -t devops-nodejs-app:${{ github.sha }} .
+    
+    - name: Push to Docker Hub (optional)
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        echo "Docker Hub push would happen here"
+        # docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+        # docker push devops-nodejs-app:${{ github.sha }}
