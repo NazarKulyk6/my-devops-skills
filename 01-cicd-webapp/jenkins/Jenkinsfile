@@ -1,0 +1,67 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_IMAGE = 'devops-webapp'
+        DOCKER_TAG = "${env.BUILD_NUMBER}"
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build') {
+            parallel {
+                stage('Node.js Build') {
+                    steps {
+                        dir('nodejs-app') {
+                            sh 'npm install'
+                            sh 'npm test'
+                        }
+                    }
+                }
+                stage('Python Build') {
+                    steps {
+                        dir('python-app') {
+                            sh 'pip install -r requirements.txt'
+                            sh 'pytest test_app.py'
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
+                dir('nodejs-app') {
+                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                }
+            }
+        }
+        
+        stage('Deploy') {
+            when {
+                branch 'main'
+            }
+            steps {
+                echo "Deploying to production..."
+                // Add deployment steps here
+            }
+        }
+    }
+    
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo "Pipeline succeeded!"
+        }
+        failure {
+            echo "Pipeline failed!"
+        }
+    }
+}
