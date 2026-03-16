@@ -18,22 +18,22 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
-        cache-dependency-path: nodejs-app/package.json
+        cache-dependency-path: 01-cicd-webapp/nodejs-app/package.json
     
     - name: Install dependencies
-      working-directory: ./nodejs-app
+      working-directory: ./01-cicd-webapp/nodejs-app
       run: npm ci
     
     - name: Run linter
-      working-directory: ./nodejs-app
+      working-directory: ./01-cicd-webapp/nodejs-app
       run: npm run lint || true
     
     - name: Run tests
-      working-directory: ./nodejs-app
+      working-directory: ./01-cicd-webapp/nodejs-app
       run: npm test
     
     - name: Build Docker image
-      working-directory: ./nodejs-app
+      working-directory: ./01-cicd-webapp/nodejs-app
       run: docker build -t devops-nodejs-app:${{ github.sha }} .
     
     - name: Push to Docker Hub (optional)
